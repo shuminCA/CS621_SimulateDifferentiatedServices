@@ -17,15 +17,15 @@ int main (int argc, char *argv[])
 
     Time::SetResolution (Time::NS);
 
-    LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
-    LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
+    LogComponentEnable ("BulkSendApplication", LOG_LEVEL_INFO);
+    LogComponentEnable ("PacketSink", LOG_LEVEL_INFO);
 
     // Create three nodes
     NodeContainer nodes;
     nodes.Create (3);
 
     // Create two PointToPoint channels with different data rates;
-    PointToPointHelper potinToPoint, pointToPoint;
+    PointToPointHelper potinToPointA, pointToPointB;
     pointToPointA.SetDeviceAttribute("DataRate", StringValue ("5Mbps"));
     pointToPointA.SetChannelAttribute ("Delay", StringValue ("2ms"));
     pointToPointB.SetDeviceAttribute("DataRate", StringValue ("5Mbps"));
@@ -48,39 +48,35 @@ int main (int argc, char *argv[])
     interfacesA = addressA.Assign (devicesA);
     interfacesB = addressB.Assign (devicesB);
     
-    // Enable QoS on the middle node
+    // Set up the SPQ on node 1
     /*-----------------------------------------------------*/
-    TrafficControlHelper tch;
-    tch.SetRootQueueDisc("ns3::StrictPriorityQueue");
-    tch.Install(devicesA.Get(1));
-    tch.Install(devicesB.Get(0));
+    Ptr<StrictPriorityQueue> spq = CreateObject<StrictPriorityQueue>(2);
+    nodes.Get(1)->GetDevice(0)->GetObject<PointToPointNetDevice>()->SetQueue(spq);
+    nodes.Get(1)->GetDevice(0)->GetObject<PointToPointNetDevice>()->SetQueue(spq);
 
-    // Application A
+    // Set up the server application on node 2
+    uint16_t portServer = 9;
+    PacketSinkHelper server ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), portServer));
+    ApplicationContainer serverApp = server.Install (nodes.Get (2));
+    serverApp.Start (Seconds (1.0));
+    serverApp.Stop (Seconds (10.0));
+
+    // Set up the client application on node 0
     uint16_t portA = 50000;
-    uint32_t maxBytes = 0;
-    BulkSendHelper sourceA ("ns3:TcpSocketFactory", InetSocketAddress (interfacesA.GetAddress(1), portA));
-    sourceA.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-    ApplicationContainer sourceAppsA = sourceA.Install (nodes.Get(0));
-    sourceAppsA.Start (Seconds (3.0));
-    sourceAppsA.Stop (Seconds (12.0));
+    BulkSendHelper clientA ("ns3:TcpSocketFactory", InetSocketAddress (interfacesB.GetAddress(1), portA));
+    clientA.SetAttribute ("MaxBytes", UintegerValue (0));
+    ApplicationContainer clientAppA = clientA.Install (nodes.Get(0));
+    clientAppA.Start (Seconds (2.5));
+    clientAppA.Stop (Seconds (10.0));
 
-    PacketSinkHelper sinkA ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny(), portA));
-    ApplicationContainer sinkAppsA = sinkA.Install (node.Get(1));
-    sinkA.Start (Seconds (1.0));
-    sinkA.Stop (Seconds (15.0));
-
-    // Application B
     uint16_t portB = 50001;
-    BulkSendHelper sourceB ("ns3::TcpSocketFactory", InetSocketAddress (interfacesA.GetAddress (1), portB));
-    sourceB.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-        ApplicationContainer sourceAppsB = sourceB.Install (nodes.Get (0));
-    sourceAppsB.Start (Seconds (1.0));
-    sourceAppsB.Stop (Seconds (10.0));
+    BulkSendHelper clientB ("ns3::TcpSocketFactory", InetSocketAddress (interfacesB.GetAddress (1), portB));
+    clientB.SetAttribute ("MaxBytes", UintegerValue (0));
+        ApplicationContainer clientAppsB = clientB.Install (nodes.Get (0));
+    clientAppB.Start (Seconds (2.0));
+    clientAppB.Stop (Seconds (10.0));
 
-    PacketSinkHelper sinkB ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), portB));
-    ApplicationContainer sinkAppsB = sinkB.Install (nodes.Get (1));
-    sinkAppsB.Start (Seconds (1.0));
-    sinkAppsB.Stop (Seconds (15.0));
+
 
     // Enable generating pcap files
     pointToPointA.EnablePcapAll("three-node-topology-A");
