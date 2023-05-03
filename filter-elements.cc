@@ -1,5 +1,7 @@
 #include "filter-elements.h"
 
+namespace ns3 {
+
 SrcIPAddr::SrcIPAddr(Ipv4Address value) : m_value(value) {}
 
 bool SrcIPAddr::match(Ptr<Packet> p) {
@@ -38,4 +40,17 @@ bool ProtocolNo::match(Ptr<Packet> p) {
   Ipv4Header header;
   p->PeekHeader(header);
   return header.GetProtocol() == m_value;
+}
+
+SourceMask::SourceMask(Ipv4Mask value, Ipv4Address referenceAddress) 
+  : m_value(value), m_referenceAddress(referenceAddress) {}
+
+bool SourceMask::match(Ptr<Packet> p) {
+  Ipv4Header ipv4Header;
+  p->PeekHeader(ipv4Header);
+  Ipv4Address srcAddress = ipv4Header.GetSource();
+  Ipv4Address maskedSrcAddress = srcAddress.CombineMask(m_value);
+  Ipv4Address maskedRefAddress = m_referenceAddress.CombineMask(m_value);
+  return maskedSrcAddress == maskedRefAddress;
+}
 }

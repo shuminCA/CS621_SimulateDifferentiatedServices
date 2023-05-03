@@ -4,21 +4,22 @@
 #include "ns3/queue.h"
 #include "ns3/packet.h"
 #include <vector>
+#include <queue>
 #include "filter-elements.h"
 #include "filter.h"
 
-using namespace ns3;
+namespace ns3 {
 
 class TrafficClass {
 public:
-  TrafficClass(uint32_t bytes, uint32_t packets, uint32_t maxPackets,
-               uint32_t maxBytes, double_t weight, uint32_t priority_level,
-               bool isDefault);
+  TrafficClass(bool isDefault, uint32_t packets = 0, uint32_t maxPackets = 100, double_t weight = 1, uint32_t priority_level = 1);
   virtual ~TrafficClass();
   void AddFilter(Filter* filter);
   bool match(Ptr<Packet> p);
-  void Enqueue(Ptr<Packet> packet);
+  bool Enqueue(Ptr<Packet> packet);
   Ptr<Packet> Dequeue();
+  Ptr<Packet> Peek();
+  bool IsEmpty();
 
 private:
   uint32_t m_packets;
@@ -29,5 +30,6 @@ private:
   std::queue<Ptr<Packet>> m_queue;
   std::vector<Filter*> m_filters;
 };
+}
 
 #endif // TRAFFIC_CLASS_H

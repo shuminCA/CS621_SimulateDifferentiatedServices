@@ -1,9 +1,8 @@
 #include "traffic-class.h"
 
-using namespace ns3;
+namespace ns3 {
 
-TrafficClass::TrafficClass(uint32_t packets, uint32_t maxPackets, double_t weight, uint32_t priority_level,
-                           bool isDefault)
+TrafficClass::TrafficClass(bool isDefault,uint32_t packets, uint32_t maxPackets, double_t weight, uint32_t priority_level)
     : m_packets(packets), m_maxPackets(maxPackets), m_weight(weight), m_priority_level(priority_level),
       m_isDefault(isDefault) {}
 
@@ -22,16 +21,17 @@ bool TrafficClass::match(Ptr<Packet> p) {
   return true;
 }
 
-void TrafficClass::Enqueue(Ptr<Packet> packet) {
+bool TrafficClass::Enqueue(Ptr<Packet> packet) {
   if (m_packets < m_maxPackets) {
     m_queue.push(packet);
     m_packets++;
+    return true;
   } else {
-    NS_LOG_WARN("TrafficClass Queue is Full");
+    return false;
   }
 }
 
-bool TrafficClass::IsEmpty(Ptr<Packet> packet) {
+bool TrafficClass::IsEmpty() {
   return m_queue.empty();
 }
 
@@ -52,4 +52,5 @@ Ptr<Packet> TrafficClass::Peek() {
     return packet;
   }
   return nullptr;
+}
 }

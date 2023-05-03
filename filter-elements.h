@@ -6,10 +6,11 @@
 #include "ns3/ipv4-header.h"
 #include "ns3/udp-header.h"
 
-using namespace ns3;
+namespace ns3 {
 
 class FilterElement {
 public:
+  virtual ~FilterElement(){}
   virtual bool match(Ptr<Packet> p) = 0;
 };
 
@@ -62,5 +63,17 @@ public:
 
   bool match(Ptr<Packet> p) override;
 };
+
+class SourceMask : public FilterElement {
+private:
+  Ipv4Mask m_value;
+  Ipv4Address m_referenceAddress;
+
+public:
+  SourceMask(Ipv4Mask value, Ipv4Address referenceAddress);
+
+  bool match(Ptr<Packet> p) override;
+};
+}
 
 #endif // FILTER_ELEMENTS_H
