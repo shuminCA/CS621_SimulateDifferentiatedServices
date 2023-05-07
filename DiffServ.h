@@ -1,33 +1,34 @@
-// #ifndef DIFFSERV_H
-// #define DIFFSERV_H
+#ifndef DIFFSERV_H
+#define DIFFSERV_H
 
-// #include <vector>
-// #include "ns3/packet.h"
-// #include "ns3/queue.h"
-// #include "ns3/nstime.h"
-// #include "ns3/event-id.h"
-// #include "traffic-class.h"
-// #include "filter.h"
+#include <vector>
+#include "ns3/packet.h"
+#include "ns3/queue.h"
+#include "ns3/nstime.h"
+#include "ns3/event-id.h"
+#include "traffic-class.h"
+#include "filter.h"
 
-// namespace ns3{
+namespace ns3 {
 
-// class DiffServ: public Queue<Packet> {
+class DiffServ : public Queue<Packet> {
+public:
+    static TypeId GetTypeId(void);
+    explicit DiffServ(int num = 1);
+    ~DiffServ();
 
-// public:
-//     static TypeId GetTypeId (void);
-//     DiffServ(int num);
-//     DiffServ();
-//     ~DiffServ();
+    virtual Ptr<Packet> Schedule(void) = 0;
+    virtual uint32_t Classify(Ptr<Packet> p) = 0;
+    TrafficClass* GetTrafficClass(int num);
+    virtual bool Enqueue(Ptr<Packet> p) = 0;
+    virtual Ptr<Packet> Dequeue(void) = 0;
+    virtual Ptr<Packet> Remove(void) = 0;
+    virtual Ptr<const Packet> Peek(void) const = 0;
 
-//     Ptr<Packet> Schedule(void);
-//     uint32_t Classify(Ptr<Packet> p);
+protected:
+    std::vector<TrafficClass*> q_class;
+};
 
-// protected:
-//     std::vector<TrafficClass> q_class;
-//     bool DoEnqueue(Ptr<Packet> p);
-//     Ptr<Packet> DoDequeue(void);
-//     Ptr<const Packet> DoPeek(void) const;
-// };
-// }
+} // namespace ns3
 
-// #endif
+#endif // DIFFSERV_H

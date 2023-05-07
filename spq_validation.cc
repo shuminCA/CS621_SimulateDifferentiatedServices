@@ -76,8 +76,6 @@
 //     clientAppB.Start (Seconds (2.0));
 //     clientAppB.Stop (Seconds (10.0));
 
-
-
 //     // Enable generating pcap files
 //     pointToPointA.EnablePcapAll("three-node-topology-A");
 //     pointToPointB.EnablePcapAll("three-node-topology-B");

@@ -13,6 +13,7 @@ public:
 
   void AddFilterElement(FilterElement* element);
   bool match(Ptr<Packet> p);
+  uint32_t size();
 
 private:
   std::vector<FilterElement*> m_elements;

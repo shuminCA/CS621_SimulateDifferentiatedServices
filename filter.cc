@@ -2,7 +2,9 @@
 
 namespace ns3 {
 
-Filter::Filter() {}
+Filter::Filter() {
+  std::cout << "Filter: Create Filter" << std::endl;
+}
 
 Filter::~Filter() {
   for (auto element : m_elements) {
@@ -11,15 +13,26 @@ Filter::~Filter() {
 }
 
 void Filter::AddFilterElement(FilterElement* element) {
+  std::cout << "Filter: AddFilterElement" << std::endl;
   m_elements.push_back(element);
 }
 
+uint32_t Filter::size(){
+  return m_elements.size();
+}
+
 bool Filter::match(Ptr<Packet> p) {
-  for (auto element : m_elements) {
-    if (!element->match(p)) {
-      return false;
+  if (m_elements.size() == 0){
+    return false;
+  }else{
+    for (auto element : m_elements) {
+      std::cout << "Filter: element size " << m_elements.size()<< std::endl;
+      if (!element->match(p)) {
+        return false;
+      }
     }
+    std::cout << "Filter: return true" << std::endl;
+    return true;
   }
-  return true;
 }
 }

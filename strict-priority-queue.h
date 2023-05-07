@@ -1,22 +1,25 @@
-// #ifndef STRICT_PRIORITY_QUEUE_H
-// #define STRICT_PRIORITY_QUEUE_H
+#ifndef STRICT_PRIORITY_QUEUE_H
+#define STRICT_PRIORITY_QUEUE_H
 
-// #include "DiffServ.h"
+#include "DiffServ.h"
 
-// namespace ns3 {
+namespace ns3 {
 
-// class StrictPriorityQueue : public DiffServ {
-// public:
-//     static TypeId GetTypeId(void);
-//     StrictPriorityQueue();
-//     ~StrictPriorityQueue();
+class StrictPriorityQueue : public DiffServ {
+public:
+    static TypeId GetTypeId(void);
+    StrictPriorityQueue(int num = 1);
+    ~StrictPriorityQueue();
 
-// protected:
-//     bool DoEnqueue(Ptr<Packet> p) override;
-//     Ptr<Packet> DoDequeue(void) override;
-//     Ptr<const Packet> DoPeek(void) const override;
-// };
+    bool Enqueue(Ptr<Packet> p) override;
+    Ptr<Packet> Dequeue(void) override;
+    Ptr<const Packet> Peek(void) const override;
+    Ptr<Packet> Remove(void) override;
+    uint32_t Classify(Ptr<Packet> p) override;
+    Ptr<Packet> Schedule() override;
 
-// } // namespace ns3
+};
 
-// #endif // STRICT_PRIORITY_QUEUE_H
+} // namespace ns3
+
+#endif // STRICT_PRIORITY_QUEUE_H

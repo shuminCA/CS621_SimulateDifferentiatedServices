@@ -12,15 +12,18 @@ namespace ns3 {
 
 class TrafficClass {
 public:
-  TrafficClass(bool isDefault, uint32_t packets = 0, uint32_t maxPackets = 100, double_t weight = 1, uint32_t priority_level = 1);
+  TrafficClass(uint32_t priority_level, bool isDefault = false, uint32_t packets = 0, uint32_t maxPackets = 10000, double_t weight = 1);
   virtual ~TrafficClass();
   void AddFilter(Filter* filter);
   bool match(Ptr<Packet> p);
   bool Enqueue(Ptr<Packet> packet);
   Ptr<Packet> Dequeue();
-  Ptr<Packet> Peek();
-  bool IsEmpty();
-
+  Ptr<Packet> Peek() const;
+  bool IsEmpty() const;
+  // const std::vector<Filter*>& GetFilters() const;
+  uint32_t GetFilterSize();
+  uint32_t GetQueueSize();
+  
 private:
   uint32_t m_packets;
   uint32_t m_maxPackets;

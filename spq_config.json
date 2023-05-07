@@ -1,5 +1,11 @@
 {
-    "number":3,
-    "priority_levels": [0, 1, 2]
+    "number":2,
+    "queue_infor":[{
+        "priority_level":0,
+        "dest_port":8080
+    },{
+        "priority_level":1,
+        "dest_port":8081
+    }]
 }
   
