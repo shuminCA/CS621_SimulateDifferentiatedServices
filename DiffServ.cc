@@ -43,9 +43,42 @@ DiffServ::~DiffServ() {
   }
 }
 
-TrafficClass* DiffServ::GetTrafficClass(int num){
+TrafficClass* DiffServ::GetTrafficClass(uint32_t num) const{
     return q_class[num];
 }
 
+uint32_t DiffServ::GetSize() const {
+  return q_class.size();
+}
+
+bool DiffServ::Enqueue(Ptr<Packet> p) {
+  // classify packet
+  // std::cout << "DiffServ: Enqueue" << std::endl;
+  // std::cout << "DiffServ: Enqueue GetSize(): " << GetSize() << std::endl;
+  uint32_t cls = Classify(p);
+  std::cout << "DiffServ: Enqueue Classify(): " << cls << std::endl;
+  // enqueue packet to the appropriate class
+  if (cls < GetSize()) {
+    std::cout << "StrictPriorityQueue: success: " << cls << std::endl;
+    TrafficClass* tc = GetTrafficClass(cls);
+    return tc->Enqueue(p);
+  } else {
+    std::cout << "DiffServ: false: " << cls << std::endl;
+    return false;
+  }
+}
+
+uint32_t DiffServ::Classify(Ptr<Packet> p) {
+  for (uint32_t i = 0; i < GetSize(); ++i) {
+    // std::cout << "StrictPriorityQueue: Classify TrafficClass" << i << std::endl;
+    // std::cout << "StrictPriorityQueue: Classify Filter size" <<q_class[i]->GetFilterSize()<< std::endl;
+    TrafficClass* tc = GetTrafficClass(i);
+    if (tc->match(p)) {
+        return i;
+      }
+    }
+    // std::cout << "StrictPriorityQueue: Classify return -1 " << std::endl;
+  return -1;
+}
 
 }

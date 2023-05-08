@@ -17,15 +17,17 @@ public:
     explicit DiffServ(int num = 1);
     ~DiffServ();
 
-    virtual Ptr<Packet> Schedule(void) = 0;
-    virtual uint32_t Classify(Ptr<Packet> p) = 0;
-    TrafficClass* GetTrafficClass(int num);
-    virtual bool Enqueue(Ptr<Packet> p) = 0;
+    uint32_t Classify(Ptr<Packet> p);
+    TrafficClass* GetTrafficClass(uint32_t num) const;
+    bool Enqueue(Ptr<Packet> p);
+    uint32_t GetSize() const;
+
     virtual Ptr<Packet> Dequeue(void) = 0;
     virtual Ptr<Packet> Remove(void) = 0;
+    virtual Ptr<Packet> Schedule(void) = 0;
     virtual Ptr<const Packet> Peek(void) const = 0;
 
-protected:
+private:
     std::vector<TrafficClass*> q_class;
 };
 

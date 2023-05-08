@@ -1,0 +1,5 @@
+{
+    "queue_num":3,
+    "quanta_ratio":"3:2:1",
+    "dest_port":[8080, 8081, 8082]
+}

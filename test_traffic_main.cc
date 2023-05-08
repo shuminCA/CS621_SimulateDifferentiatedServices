@@ -1,18 +1,65 @@
-#include "DiffServ.h"
-#include "strict-priority-queue.h"
-
+#include "deficit-round-robin.h"
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/network-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/traffic-control-module.h"
+#include "json.hpp"
+#include <fstream>
 
 using namespace ns3;
+using json = nlohmann::json;
+
+void readFile(std::string filename, uint32_t &queue_num, std::string &quantaRatio,uint16_t &dest_portA, uint16_t &dest_portB, uint16_t &dest_portC) {
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file: " << filename << std::endl;
+        exit(1);
+    }
+
+    json config;
+    try {
+        file >> config;
+    } catch (const json::exception &e) {
+        std::cerr << "Error: JSON parsing error: " << e.what() << std::endl;
+        exit(1);
+    }
+
+    queue_num = config["queue_num"];
+    quantaRatio = config["quanta_ratio"];
+    dest_portA = config["dest_port"][0];
+    dest_portB = config["dest_port"][1];
+    dest_portC = config["dest_port"][2];
+}
 
 int
 main(int argc, char* argv[])
 {
+    uint32_t queue_num;
+    std::string quantaRatio;
+    uint16_t portA;
+    uint16_t portB;
+    uint16_t portC;
+
+    readFile("scratch/cs621_QoS/drr_config.json", queue_num, quantaRatio, portA, portB, portC);
+
+    uint32_t maxPacketCount = 20000;
+    
+    double SERVER_START_TIME = 1.0;
+    double SERVER_END_TIME = 30.0;
+    double CLIENT_START_TIME = 2.0;
+    double CLIENT_END_TIME = 30.0;
+    double PACKET_INTERVAL = 0.0003;
+
+    std::string DATARATEA = "20Mbps";
+    std::string DATARATEB = "10Mbps";
+    std::string DEFAULT_DELAY = "2ms";
+    Ipv4Mask IPV4_MASK = "255.255.255.0";
+    Ipv4Address IPV4_ADDRA = "10.1.1.0";
+    Ipv4Address IPV4_ADDRB = "10.1.2.0";
+
     CommandLine cmd(__FILE__);
     cmd.Parse(argc, argv);
 
@@ -22,27 +69,22 @@ main(int argc, char* argv[])
     // LogComponentEnable ("PacketSink", LOG_LEVEL_INFO);
     // LogComponentEnable ("PointToPointNetDevice", LOG_LEVEL_INFO);
 
-    uint16_t portA = 8080;
-    uint16_t portB = 8081;
-    // uint16_t portServer = 8090;
-    uint32_t maxPacketCount = 20000;
-
     // Create three nodes
     NodeContainer nodes;
     nodes.Create(3);
 
     // Create two PointToPoint channels with different data rates;
     PointToPointHelper pointToPoint;
-    pointToPoint.SetDeviceAttribute("DataRate", StringValue("20Mbps"));
-    pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
+    pointToPoint.SetDeviceAttribute("DataRate", StringValue(DATARATEA));
+    pointToPoint.SetChannelAttribute("Delay", StringValue(DEFAULT_DELAY));
 
     // Create devices and install the channel on the nodes
     NetDeviceContainer devicesA;
     devicesA = pointToPoint.Install(nodes.Get(0), nodes.Get(1));
 
     NetDeviceContainer devicesB;
-    pointToPoint.SetDeviceAttribute("DataRate", StringValue("10Mbps"));
-    pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
+    pointToPoint.SetDeviceAttribute("DataRate", StringValue(DATARATEB));
+    pointToPoint.SetChannelAttribute("Delay", StringValue(DEFAULT_DELAY));
     devicesB = pointToPoint.Install(nodes.Get(1), nodes.Get(2));
 
     // Install the Internet stack and assign IPv4 addresses
@@ -50,18 +92,18 @@ main(int argc, char* argv[])
     stack.Install(nodes);
 
     Ipv4AddressHelper addressA;
-    addressA.SetBase("10.1.1.0", "255.255.255.0");
+    addressA.SetBase(IPV4_ADDRA, IPV4_MASK);
 
     Ipv4InterfaceContainer interfacesA;
     interfacesA = addressA.Assign(devicesA);
 
     Ipv4InterfaceContainer interfacesB;
-    addressA.SetBase("10.1.2.0", "255.255.255.0");
+    addressA.SetBase(IPV4_ADDRB, IPV4_MASK);
     interfacesB = addressA.Assign(devicesB);
 
-    /*----------------customized spq starts----------------*/
+    /*----------------customized drr starts----------------*/
 
-    Ptr<StrictPriorityQueue> spq = CreateObject<StrictPriorityQueue>(2);
+    Ptr<DeficitRoundRobin> spq = CreateObject<DeficitRoundRobin>(queue_num, quantaRatio);
     Filter* p0_filterA = new Filter();
     // p0_filterA->AddFilterElement(new DestPortNo(portServer));
     p0_filterA->AddFilterElement(new SrcPortNo(portA));
@@ -82,6 +124,16 @@ main(int argc, char* argv[])
     spq->GetTrafficClass(1)->AddFilter(p1_filterB);
     std::cout << "Main: 1 filter size: " << spq->GetTrafficClass(1)->GetFilterSize() << std::endl;
 
+    Filter* p2_filterA = new Filter();
+    // p1_filterA->AddFilterElement(new DestPortNo(portServer));
+    p2_filterA->AddFilterElement(new SrcPortNo(portC));
+    Filter* p2_filterB = new Filter();
+    p2_filterB->AddFilterElement(new DestPortNo(portC));
+    // p1_filterB->AddFilterElement(new SrcPortNo(portServer));
+    spq->GetTrafficClass(2)->AddFilter(p2_filterA);
+    spq->GetTrafficClass(2)->AddFilter(p2_filterB);
+    std::cout << "Main: 2 filter size: " << spq->GetTrafficClass(2)->GetFilterSize() << std::endl;
+
     nodes.Get(1)->GetDevice(0)->GetObject<PointToPointNetDevice>()->SetQueue(spq);
     nodes.Get(1)->GetDevice(1)->GetObject<PointToPointNetDevice>()->SetQueue(spq);
 
@@ -94,68 +146,53 @@ main(int argc, char* argv[])
     // Set up the server application on node 2
     UdpServerHelper serverA(portA);
     ApplicationContainer serverAppA = serverA.Install(nodes.Get(2));
-    serverAppA.Start(Seconds(1.0));
-    serverAppA.Stop(Seconds(15.0));
+    serverAppA.Start(Seconds(SERVER_START_TIME));
+    serverAppA.Stop(Seconds(SERVER_END_TIME));
 
     UdpServerHelper serverB(portB);
     ApplicationContainer serverAppB = serverB.Install(nodes.Get(2));
-    serverAppB.Start(Seconds(1.0));
-    serverAppB.Stop(Seconds(30.0));
+    serverAppB.Start(Seconds(SERVER_START_TIME));
+    serverAppB.Stop(Seconds(SERVER_END_TIME));
+
+    UdpServerHelper serverC(portC);
+    ApplicationContainer serverAppC = serverC.Install(nodes.Get(2));
+    serverAppC.Start(Seconds(SERVER_START_TIME));
+    serverAppC.Stop(Seconds(SERVER_END_TIME));
 
     // Set up the client application on node 0
-    Time interPacketIntervalA = Seconds(0.0003);
+    // Client A
+    Time interPacketInterval = Seconds(PACKET_INTERVAL);
     UdpClientHelper clientA(interfacesB.GetAddress(1), portA);
     clientA.SetAttribute("MaxPackets", UintegerValue(maxPacketCount));
-    clientA.SetAttribute("Interval", TimeValue(interPacketIntervalA));
+    clientA.SetAttribute("Interval", TimeValue(interPacketInterval));
     clientA.SetAttribute("PacketSize", UintegerValue(1024));
 
     ApplicationContainer clientAppA = clientA.Install(nodes.Get(0));
-    clientAppA.Start(Seconds(4.0));
-    clientAppA.Stop(Seconds(30.0));
+    clientAppA.Start(Seconds(CLIENT_START_TIME));
+    clientAppA.Stop(Seconds(CLIENT_END_TIME));
 
-    Time interPacketIntervalB = Seconds(0.0003);
+    // Client B
     UdpClientHelper clientB(interfacesB.GetAddress(1), portB);
     clientB.SetAttribute("MaxPackets", UintegerValue(maxPacketCount));
-    clientB.SetAttribute("Interval", TimeValue(interPacketIntervalB));
+    clientB.SetAttribute("Interval", TimeValue(interPacketInterval));
     clientB.SetAttribute("PacketSize", UintegerValue(1024));
 
     ApplicationContainer clientAppB = clientB.Install(nodes.Get(0));
-    clientAppB.Start(Seconds(2.0));
-    clientAppB.Stop(Seconds(30.0));
+    clientAppB.Start(Seconds(CLIENT_START_TIME));
+    clientAppB.Stop(Seconds(CLIENT_END_TIME));
 
-    /*---------------------UDP ends------------------*/
+    // Client C
+    UdpClientHelper clientC(interfacesB.GetAddress(1), portC);
+    clientC.SetAttribute("MaxPackets", UintegerValue(maxPacketCount));
+    clientC.SetAttribute("Interval", TimeValue(interPacketInterval));
+    clientC.SetAttribute("PacketSize", UintegerValue(1024));
 
-    // /*-----------------Tcp Starts/ Do not touch ----------------*/
-    // // Set up the server application on node 2
-    // PacketSinkHelper serverA ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (),
-    // portA)); ApplicationContainer serverAppA = serverA.Install (nodes.Get (2)); serverAppA.Start
-    // (Seconds (1.0)); serverAppA.Stop (Seconds (15.0));
-
-    // // Set up the server application on node 2
-    // PacketSinkHelper serverB ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (),
-    // portB)); ApplicationContainer serverAppB = serverB.Install (nodes.Get (2)); serverAppB.Start
-    // (Seconds (1.0)); serverAppB.Stop (Seconds (15.0));
-
-    // // Set up the client application on node 0
-    // BulkSendHelper clientA ("ns3::TcpSocketFactory", InetSocketAddress
-    // (interfacesB.GetAddress(1), portA)); clientA.SetAttribute ("MaxBytes", UintegerValue (0));
-    // clientA.SetAttribute("Local", AddressValue(InetSocketAddress(Ipv4Address::GetAny(), portA)));
-    // ApplicationContainer clientAppA = clientA.Install (nodes.Get(0));
-    // clientAppA.Start (Seconds (2.5));
-    // clientAppA.Stop (Seconds (15.0));
-
-    // BulkSendHelper clientB ("ns3::TcpSocketFactory", InetSocketAddress (interfacesB.GetAddress
-    // (1), portB)); clientB.SetAttribute ("MaxBytes", UintegerValue (0));
-    // clientB.SetAttribute("Local", AddressValue(InetSocketAddress(Ipv4Address::GetAny(), portB)));
-    // ApplicationContainer clientAppB = clientB.Install (nodes.Get (0));
-    // clientAppB.Start (Seconds (2.0));
-    // clientAppB.Stop (Seconds (15.0));
-
-    /*-----------------Tcp ends/ Do not touch ----------------*/
+    ApplicationContainer clientAppC = clientC.Install(nodes.Get(0));
+    clientAppC.Start(Seconds(CLIENT_START_TIME));
+    clientAppC.Stop(Seconds(CLIENT_END_TIME));
 
     // Enable generating pcap files
-    pointToPoint.EnablePcapAll("scratch/cs621_QoS/pcap/three-node-topology-A");
-    // pointToPointB.EnablePcapAll("scratch/cs621_QoS/pcap/three-node-topology-B");
+    pointToPoint.EnablePcapAll("scratch/cs621_QoS/pcap_drr/drr-3nodes-topology");
 
     Simulator::Run();
     Simulator::Destroy();

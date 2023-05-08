@@ -2,9 +2,8 @@
 
 namespace ns3 {
 
-TrafficClass::TrafficClass(uint32_t priority_level, bool isDefault, uint32_t packets, uint32_t maxPackets, double_t weight)
-    : m_packets(packets), m_maxPackets(maxPackets), m_weight(weight), m_priority_level(priority_level),
-      m_isDefault(isDefault) {}
+TrafficClass::TrafficClass(uint32_t priority_level, uint32_t packets, uint32_t maxPackets, double_t weight)
+    : m_packets(packets), m_maxPackets(maxPackets), m_weight(weight), m_priority_level(priority_level) {}
 
 TrafficClass::~TrafficClass() {}
 
@@ -12,11 +11,6 @@ void TrafficClass::AddFilter(Filter* filter) {
   m_filters.push_back(filter);
   std::cout << "TrafficClass: AddFilters() -> size:" << m_filters.size() << std::endl;
 }
-
-// const std::vector<Filter*>& TrafficClass::GetFilters() const {
-//   std::cout << "TrafficClass: GetFilters() -> size:" << m_filters.size() << std::endl;
-//   return m_filters;
-// }
 
 bool TrafficClass::match(Ptr<Packet> p) {
     for (auto& filter : m_filters) {
@@ -41,10 +35,6 @@ bool TrafficClass::Enqueue(Ptr<Packet> packet) {
   }
 }
 
-bool TrafficClass::IsEmpty() const{
-  return m_queue.empty();
-}
-
 Ptr<Packet> TrafficClass::Dequeue() {
   if (!m_queue.empty()) {
     Ptr<Packet> packet = m_queue.front();
@@ -63,11 +53,17 @@ Ptr<Packet> TrafficClass::Peek() const{
   return nullptr;
 }
 
-uint32_t TrafficClass::GetQueueSize() {
-  return m_queue.size();
-}
+bool TrafficClass::IsEmpty() const{ return m_queue.empty(); }
 
-uint32_t TrafficClass::GetFilterSize() {
-  return m_filters.size();
-}
+uint32_t TrafficClass::GetQueueSize() { return m_queue.size(); }
+
+uint32_t TrafficClass::GetFilterSize() { return m_filters.size(); }
+
+void TrafficClass::SetDeficit(uint32_t deficit) { m_deficit = deficit; }
+
+void TrafficClass::SetWeight(double weight) { m_weight = weight; }
+
+uint32_t TrafficClass::GetDeficit() const { return m_deficit; }
+
+double_t TrafficClass::GetWeight() const { return m_weight; }
 }

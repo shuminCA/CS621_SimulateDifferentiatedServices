@@ -1,6 +1,6 @@
 {
-    "number":2,
-    "queue_infor":[{
+    "queue_num":2,
+    "queue_info":[{
         "priority_level":0,
         "dest_port":8080
     },{
