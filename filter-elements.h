@@ -14,52 +14,12 @@ public:
   virtual bool match(Ptr<Packet> p) = 0;
 };
 
-class SrcIPAddr : public FilterElement {
+class SourceIPAddress : public FilterElement {
 private:
   Ipv4Address m_value;
 
 public:
-  SrcIPAddr(Ipv4Address value);
-
-  bool match(Ptr<Packet> p) override;
-};
-
-class SrcPortNo : public FilterElement {
-private:
-  uint32_t m_value;
-
-public:
-  SrcPortNo(uint32_t value);
-
-  bool match(Ptr<Packet> p) override;
-};
-
-class DestIPAddr : public FilterElement {
-private:
-  Ipv4Address m_value;
-
-public:
-  DestIPAddr(Ipv4Address value);
-
-  bool match(Ptr<Packet> p) override;
-};
-
-class DestPortNo : public FilterElement {
-private:
-  uint32_t m_value;
-
-public:
-  DestPortNo(uint32_t value);
-
-  bool match(Ptr<Packet> p) override;
-};
-
-class ProtocolNo : public FilterElement {
-private:
-  uint32_t m_value;
-
-public:
-  ProtocolNo(uint32_t value);
+  SourceIPAddress(Ipv4Address value);
 
   bool match(Ptr<Packet> p) override;
 };
@@ -74,6 +34,58 @@ public:
 
   bool match(Ptr<Packet> p) override;
 };
+
+class SourcePortNumber : public FilterElement {
+private:
+  uint32_t m_value;
+
+public:
+  SourcePortNumber(uint32_t value);
+
+  bool match(Ptr<Packet> p) override;
+};
+
+class DestinationIPAddress : public FilterElement {
+private:
+  Ipv4Address m_value;
+
+public:
+  DestinationIPAddress(Ipv4Address value);
+
+  bool match(Ptr<Packet> p) override;
+};
+
+class DestinationMask : public FilterElement {
+private:
+  Ipv4Mask m_mask;
+  Ipv4Address m_address;
+
+public:
+  DestinationMask(Ipv4Mask mask, Ipv4Address address);
+
+  bool match(Ptr<Packet> p) override;
+};
+
+class DestinationPortNumber : public FilterElement {
+private:
+  uint32_t m_value;
+
+public:
+  DestinationPortNumber(uint32_t value);
+
+  bool match(Ptr<Packet> p) override;
+};
+
+class ProtocolNumber : public FilterElement {
+private:
+  uint32_t m_value;
+
+public:
+  ProtocolNumber(uint32_t value);
+
+  bool match(Ptr<Packet> p) override;
+};
+
 }
 
 #endif // FILTER_ELEMENTS_H

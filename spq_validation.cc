@@ -103,21 +103,21 @@
 
 //     Ptr<StrictPriorityQueue> spq = CreateObject<StrictPriorityQueue>(queue_num);
 //     Filter* p0_filterA = new Filter();
-//     // p0_filterA->AddFilterElement(new DestPortNo(portServer));
-//     p0_filterA->AddFilterElement(new SrcPortNo(portA));
+//     // p0_filterA->AddFilterElement(new DestinationPortNumber(portServer));
+//     p0_filterA->AddFilterElement(new SourcePortNumber(portA));
 //     Filter* p0_filterB = new Filter();
-//     p0_filterB->AddFilterElement(new DestPortNo(portA));
-//     // p0_filterB->AddFilterElement(new SrcPortNo(portServer));
+//     p0_filterB->AddFilterElement(new DestinationPortNumber(portA));
+//     // p0_filterB->AddFilterElement(new SourcePortNumber(portServer));
 //     spq->GetTrafficClass(0)->AddFilter(p0_filterA);
 //     spq->GetTrafficClass(0)->AddFilter(p0_filterB);
 //     std::cout << "Main: 0 filter size: " << spq->GetTrafficClass(0)->GetFilterSize() << std::endl;
 
 //     Filter* p1_filterA = new Filter();
-//     // p1_filterA->AddFilterElement(new DestPortNo(portServer));
-//     p1_filterA->AddFilterElement(new SrcPortNo(portB));
+//     // p1_filterA->AddFilterElement(new DestinationPortNumber(portServer));
+//     p1_filterA->AddFilterElement(new SourcePortNumber(portB));
 //     Filter* p1_filterB = new Filter();
-//     p1_filterB->AddFilterElement(new DestPortNo(portB));
-//     // p1_filterB->AddFilterElement(new SrcPortNo(portServer));
+//     p1_filterB->AddFilterElement(new DestinationPortNumber(portB));
+//     // p1_filterB->AddFilterElement(new SourcePortNumber(portServer));
 //     spq->GetTrafficClass(1)->AddFilter(p1_filterA);
 //     spq->GetTrafficClass(1)->AddFilter(p1_filterB);
 //     std::cout << "Main: 1 filter size: " << spq->GetTrafficClass(1)->GetFilterSize() << std::endl;
@@ -193,8 +193,7 @@
 //     /*-----------------Tcp ends/ Do not touch ----------------*/
 
 //     // Enable generating pcap files
-//     pointToPoint.EnablePcapAll("scratch/cs621_QoS/pcap/three-node-topology-A");
-//     // pointToPointB.EnablePcapAll("scratch/cs621_QoS/pcap/three-node-topology-B");
+//     pointToPoint.EnablePcapAll("scratch/cs621_QoS/pcap/three-3nodes-topology-A");
 
 //     Simulator::Run();
 //     Simulator::Destroy();
