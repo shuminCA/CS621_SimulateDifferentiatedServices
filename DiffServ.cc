@@ -3,16 +3,13 @@
 #include "ns3/uinteger.h"
 #include "ns3/double.h"
 #include "DiffServ.h"
-
 #include "ns3/boolean.h"
 #include "ns3/pointer.h"
 #include "ns3/simulator.h"
-
 #include "ns3/ppp-header.h"
 #include "ns3/udp-header.h"
 #include "ns3/tcp-header.h"
 #include "ns3/ipv4-header.h"
-
 #include <math.h>
 
 namespace ns3 {
@@ -34,7 +31,6 @@ DiffServ::DiffServ(int num)
     TrafficClass* tc = new TrafficClass(i);
     q_class.push_back(tc);
   }
-  std::cout << "DiffServ: Create DiffServ" << std::endl;
 }
 
 DiffServ::~DiffServ() {
@@ -52,32 +48,22 @@ uint32_t DiffServ::GetSize() const {
 }
 
 bool DiffServ::Enqueue(Ptr<Packet> p) {
-  // classify packet
-  // std::cout << "DiffServ: Enqueue" << std::endl;
-  // std::cout << "DiffServ: Enqueue GetSize(): " << GetSize() << std::endl;
   uint32_t cls = Classify(p);
-  std::cout << "DiffServ: Enqueue Classify(): " << cls << std::endl;
-  // enqueue packet to the appropriate class
   if (cls < GetSize()) {
-    std::cout << "StrictPriorityQueue: success: " << cls << std::endl;
     TrafficClass* tc = GetTrafficClass(cls);
     return tc->Enqueue(p);
   } else {
-    std::cout << "DiffServ: false: " << cls << std::endl;
     return false;
   }
 }
 
 uint32_t DiffServ::Classify(Ptr<Packet> p) {
   for (uint32_t i = 0; i < GetSize(); ++i) {
-    // std::cout << "StrictPriorityQueue: Classify TrafficClass" << i << std::endl;
-    // std::cout << "StrictPriorityQueue: Classify Filter size" <<q_class[i]->GetFilterSize()<< std::endl;
     TrafficClass* tc = GetTrafficClass(i);
-    if (tc->match(p)) {
+    if (tc->Match(p)) {
         return i;
       }
     }
-    // std::cout << "StrictPriorityQueue: Classify return -1 " << std::endl;
   return -1;
 }
 

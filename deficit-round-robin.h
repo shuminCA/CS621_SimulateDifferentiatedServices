@@ -10,7 +10,7 @@ namespace ns3 {
 class DeficitRoundRobin : public DiffServ {
 public:
     static TypeId GetTypeId(void);
-    DeficitRoundRobin(int num = 1, std::string quantaRatio = "1", uint32_t deficitSize = 1000);
+    DeficitRoundRobin(int num = 1, std::string quantaRatio = "1", uint32_t deficitSize = 100);
     ~DeficitRoundRobin();
 
     Ptr<Packet> Dequeue(void) override;
@@ -23,7 +23,6 @@ private:
     uint32_t m_currentClass;
     uint32_t m_deficitSize;
 };
-
 }
 
 #endif

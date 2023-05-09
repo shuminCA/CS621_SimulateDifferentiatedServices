@@ -11,15 +11,23 @@
 namespace ns3 {
 
 class TrafficClass {
-public:
-  TrafficClass(uint32_t priority_level, uint32_t packets = 0, uint32_t maxPackets = 10000, double_t weight = 1);
-  virtual ~TrafficClass();
 
+private:
+  uint32_t m_packets;
+  uint32_t m_maxPackets;
+  double_t m_weight;
+  uint32_t m_deficit;
+  std::queue<Ptr<Packet>> m_queue;
+  std::vector<Filter*> m_filters;
+
+public:
+  TrafficClass(uint32_t packets = 0, uint32_t maxPackets = 10000);
+  virtual ~TrafficClass();
   bool Enqueue(Ptr<Packet> packet);
   Ptr<Packet> Dequeue();
   Ptr<Packet> Peek() const;
   void AddFilter(Filter* filter);
-  bool match(Ptr<Packet> p);
+  bool Match(Ptr<Packet> p);
   bool IsEmpty() const;
   uint32_t GetFilterSize();
   uint32_t GetQueueSize();
@@ -27,15 +35,6 @@ public:
   void SetWeight(double weight);
   uint32_t GetDeficit() const;
   double GetWeight() const;
-  
-private:
-  uint32_t m_packets;
-  uint32_t m_maxPackets;
-  double_t m_weight;
-  uint32_t m_deficit;
-  uint32_t m_priority_level;
-  std::queue<Ptr<Packet>> m_queue;
-  std::vector<Filter*> m_filters;
 };
 }
 

@@ -23,10 +23,7 @@ StrictPriorityQueue::~StrictPriorityQueue() {
 }
 
 Ptr<Packet> StrictPriorityQueue::Dequeue(void) {
-  // loop through all classes
-  std::cout << "StrictPriorityQueue: Dequeue" << std::endl;
   for (uint32_t i = 0; i < GetSize(); i++) {
-    // check if class has packets
     TrafficClass* tc = GetTrafficClass(i);
     if (!tc->IsEmpty()) {
       return tc->Dequeue();

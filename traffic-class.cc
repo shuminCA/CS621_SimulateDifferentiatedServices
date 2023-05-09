@@ -2,25 +2,22 @@
 
 namespace ns3 {
 
-TrafficClass::TrafficClass(uint32_t priority_level, uint32_t packets, uint32_t maxPackets, double_t weight)
-    : m_packets(packets), m_maxPackets(maxPackets), m_weight(weight), m_priority_level(priority_level) {}
+TrafficClass::TrafficClass(uint32_t packets, uint32_t maxPackets)
+    : m_packets(packets), m_maxPackets(maxPackets) {}
 
 TrafficClass::~TrafficClass() {}
 
 void TrafficClass::AddFilter(Filter* filter) {
   m_filters.push_back(filter);
-  std::cout << "TrafficClass: AddFilters() -> size:" << m_filters.size() << std::endl;
+  // std::cout << "TrafficClass: AddFilters() -> size:" << m_filters.size() << std::endl;
 }
 
-bool TrafficClass::match(Ptr<Packet> p) {
+bool TrafficClass::Match(Ptr<Packet> p) {
     for (auto& filter : m_filters) {
-        // std::cout << "TrafficClass: match filter size()" << filter->size() << std::endl;
       if (filter->match(p)) {
-        std::cout << "TrafficClass: match false" << std::endl;
         return true;
       }
     }
-    std::cout << "TrafficClass: match true" << std::endl;
     return false;
 }
 
@@ -28,7 +25,6 @@ bool TrafficClass::Enqueue(Ptr<Packet> packet) {
   if (m_packets < m_maxPackets) {
     m_queue.push(packet);
     m_packets++;
-    std::cout << "Traffic Class: Enqueue" << std::endl;
     return true;
   } else {
     return false;

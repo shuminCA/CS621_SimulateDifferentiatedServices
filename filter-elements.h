@@ -26,11 +26,11 @@ public:
 
 class SourceMask : public FilterElement {
 private:
-  Ipv4Mask m_value;
-  Ipv4Address m_referenceAddress;
+  Ipv4Mask m_mask;
+  Ipv4Address m_address;
 
 public:
-  SourceMask(Ipv4Mask value, Ipv4Address referenceAddress);
+  SourceMask(Ipv4Mask value, Ipv4Address address);
 
   bool match(Ptr<Packet> p) override;
 };

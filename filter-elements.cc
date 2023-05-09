@@ -19,7 +19,6 @@ bool SourceIPAddress::match(Ptr<Packet> p) {
 SourcePortNumber::SourcePortNumber(uint32_t value) : m_value(value) {}
 
 bool SourcePortNumber::match(Ptr<Packet> p) {
-  std::cout << "FilterElements: SourcePortNumber: " << m_value << std::endl;
   Ptr<Packet> copy = p->Copy();
   PppHeader pppHeader;
   copy->RemoveHeader(pppHeader);
@@ -32,12 +31,10 @@ bool SourcePortNumber::match(Ptr<Packet> p) {
   if (protocol == UdpL4Protocol::PROT_NUMBER) {
     UdpHeader udpHeader;
     copy->PeekHeader(udpHeader);
-    std::cout << "FilterElements: UDPSrcPort: " << udpHeader.GetSourcePort() << std::endl;
     return udpHeader.GetSourcePort() == m_value;
   } else if (protocol == TcpL4Protocol::PROT_NUMBER) {
     TcpHeader tcpHeader;
     copy->PeekHeader(tcpHeader);
-    std::cout << "FilterElements: TCPSrcPort: " << tcpHeader.GetSourcePort() << std::endl;
     return tcpHeader.GetSourcePort() == m_value;
   }
 
@@ -52,11 +49,9 @@ bool DestinationIPAddress::match(Ptr<Packet> p) {
   return ipv4Header.GetDestination() == m_value;
 }
 
-DestPortNo::DestPortNo(uint32_t value) : m_value(value) {}
+DestinationPortNumber::DestinationPortNumber(uint32_t value) : m_value(value) {}
 
-bool DestPortNo::match(Ptr<Packet> p) {
-  std::cout << "FilterElements: DestPortNo: " << m_value << std::endl;
-
+bool DestinationPortNumber::match(Ptr<Packet> p) {
   Ptr<Packet> copy = p->Copy();
   PppHeader pppHeader;
   copy->RemoveHeader(pppHeader);
@@ -69,13 +64,10 @@ bool DestPortNo::match(Ptr<Packet> p) {
   if (protocol == UdpL4Protocol::PROT_NUMBER) {
     UdpHeader udpHeader;
     copy->PeekHeader(udpHeader);
-    std::cout << "FilterElements: UDPDestPort: " << udpHeader.GetDestinationPort() << std::endl;
     return udpHeader.GetDestinationPort() == m_value;
   } else if (protocol == TcpL4Protocol::PROT_NUMBER) {
     TcpHeader tcpHeader;
     copy->PeekHeader(tcpHeader);
-    // std::cout << "FilterElements: TCPSrcPort: " << tcpHeader.GetSourcePort() << std::endl;
-    std::cout << "FilterElements: TCPDestPort: " << tcpHeader.GetDestinationPort() << std::endl;
     return tcpHeader.GetDestinationPort() == m_value;
   }
   return false;
@@ -97,8 +89,8 @@ bool SourceMask::match(Ptr<Packet> p) {
   Ipv4Header ipv4Header;
   p->PeekHeader(ipv4Header);
   Ipv4Address PacketAddress = ipv4Header.GetSource();
-  Ipv4Address maskedPacketAddress = PacketAddress.CombineMask(m_value);
-  Ipv4Address maskedRefAddress = m_referenceAddress.CombineMask(m_value);
+  Ipv4Address maskedPacketAddress = PacketAddress.CombineMask(m_mask);
+  Ipv4Address maskedRefAddress = m_address.CombineMask(m_mask);
   return maskedPacketAddress == maskedRefAddress;
 }
 

@@ -30,7 +30,6 @@ public:
 private:
     std::vector<TrafficClass*> q_class;
 };
+}
 
-} // namespace ns3
-
-#endif // DIFFSERV_H
+#endif
