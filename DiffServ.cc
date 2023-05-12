@@ -28,7 +28,7 @@ DiffServ::GetTypeId (void)
 DiffServ::DiffServ(int num)
 {
   for (int i = 0; i < num; i++) {
-    TrafficClass* tc = new TrafficClass(i);
+    TrafficClass* tc = new TrafficClass();
     q_class.push_back(tc);
   }
 }
